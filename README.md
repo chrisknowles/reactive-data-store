@@ -120,11 +120,13 @@ This way UI elements can subscribe independently to stores and specifically to s
 There are 2 ways to integate the store with React.
 
 **Higher Order Component**
+
 ```javascript
 
 ```
 
 **Provider Component**
+
 ```javascript
 
 ```
@@ -132,12 +134,16 @@ There are 2 ways to integate the store with React.
 
 ### Vue
 
+```javascript
+
+```
 
 
+### Motivaition
 
-The motivation is twofold. Firstly to help decouple elements from hierarchical structures and to allow quick access to data points. In essence the underlying property of the library is to make a reactive data store accessible in a declarative way.
+The motivation is twofold. Firstly to help decouple elements from hierarchical structures and to allow quick access to data points. In essence the underlying purpose of the library is to make a reactive data store accessible in a declarative way.
 
-When used with custom elements, those elements can be provided a path to use so they can subscribe themselves. Then they will b directly updated by the store rather than have the need for the parent element to manage this.
+When used with custom elements, those elements can be provided a path to use so they can subscribe themselves. Then they will be directly updated by the store rather than have the need for the parent element to manage this.
 
 When you subscribe to a nested property your callback will only be called when that property changes. It will not be called if other properties on the store change saving the need for checking in the elements lifecycle hooks. This also goes for if you subscribe to a nested property and filter with `:just` or `:not` - your callback will only be called if your filtered properties change.
 
@@ -218,6 +224,7 @@ This becomes very useful for use with custom elements where you create a base el
 ```
 
 my-element.js
+
 ```javascript
 import {html} from 'lit-html';
 

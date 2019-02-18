@@ -1,0 +1,72 @@
+Store`App.status`
+Data`App.status`
+
+What about Map and Set?
+
+
+Character for multiple paths
+    currently |
+    & && and AND +
+
+data-store='App.state.dirty | App.user.loggedIn'
+data-store='App.state.dirty & App.user.loggedIn'
+data-store='App.state.dirty && App.user.loggedIn'
+data-store='App.state.dirty + App.user.loggedIn'
+data-store='App.state.dirty AND App.user.loggedIn'
+
+Or should the whole thing be done as JSON?
+Is this like GraphQL?
+How would you parse this?
+p: {
+    a: {
+        t: {
+            h: {
+                prop1: val1,
+                prop2: val2,
+                .contacts{
+                    p, r, o, p, s
+                }
+            }
+        }
+    }
+}
+
+prop1
+.array1
+:index(0)
+.prop2.array4
+:filter(id: 2)
+.contacts
+:index(1)
+:just(name)
+
+OR
+
+prop1
+.array1[0]
+.prop2
+.array4[id: 2]
+.contacts[1]
+:just(name)
+
+p.a.t.h:filter(prop1: val1, prop2: val2).contacts:just(p, r, o, p, s)
+p.a.t.h:filter(prop1: val1, prop2: val2).contacts:not(p, r, o, p, s)
+
+split on :(just|not)
+
+store: p
+path [a, t[1], h:filter(prop1: val1, prop2: val2), contacts]
+path ['a', {prop: 't', index: 1}, 'h', {prop1: 'val1', prop2: 'val2'}, 'contacts']
+
+    so an object in the path requires taking the previous value (an array of objects) and filtering it
+
+p.a.t[1].h[prop1: val1, prop2: val2].contacts:not(p, r, o, p, s)
+p.a.t[1].h{prop1: val1, prop2: val2}.contacts:not(p, r, o, p, s)
+p.a.t[1].h(prop1: val1, prop2: val2).contacts:not(p, r, o, p, s)
+
+path ['a', 't', {__index__: 1}, 'h', {prop1: 'val1', prop2: 'val2'}, 'contacts']
+
+if (part.__index__) {
+    return result[part.__index__];
+}
+

@@ -1,6 +1,6 @@
 import {BehaviorSubject} from 'rxjs';
 import {startWith, filter, map, debounceTime} from 'rxjs/operators';
-import {equals, clone} from 'ramda';
+import {equals, clone, mergeDeepRight} from 'ramda';
 import {session} from 'json-local-session-storage';
 import {isObject} from 'obj-list';
 import {parse, getDataFromPath} from './store-path';
@@ -40,16 +40,18 @@ const SUBSCRIBE_TO_PROPERTY = Symbol('subscribeToProperty');
 /**
  * Class for a single store
  */
-class _Store {
+class ReactiveDataStore {
 
-  constructor(name, data, options) {
+  constructor(name, options) {
     this.name = name;
     this[DATA] = new WeakMap();
     const storedData = options.session && session.getItem(name);
-    this[DATA].set(this, storedData || data);
-    this.props = [];
+    options.data = options.data || {};
+    this[DATA].set(this, storedData || options.data);
     this.data$ = new BehaviorSubject(this.data);
-    this.onSubscribeCallback = options.fetchData || noop;
+    this.onSubscribeCallback = options.fetch
+      ? options.fetch
+      : () => options.data;
     this.debugTimer = null;
     this.useLocalSession = options.session;
     if (!stores[name]) {
@@ -198,7 +200,7 @@ class _Store {
    */
   [UPDATE_DATA](data) {
     if (isObject(data)) {
-      return {...this._data, ...data};
+      return mergeDeepRight(this._data, data);
     } else {
       return data;
     }
@@ -217,7 +219,9 @@ class _Store {
       if (DEBUG) {
         switch (action) {
           case UPDATED:
-            console.log.green(this.name, dataCopy, updatedData);
+            console.log(`%c🍏  ${this.name}`, `color: #52BE80;line-height:1;`);
+            console.log(`   `, dataCopy);
+            console.log(`   `, updatedData);
             break;
           case NOT_UPDATED:
             console.log.yellow(`Store skipped update: ${this.name}`, dataCopy, data);
@@ -231,9 +235,9 @@ class _Store {
 
 }
 
-const getData = path => {
-  const data = parse(path);
-  return getDataFromPath({...data,  ...{data: Store(data.store).data}});
+const getData = pathDefinition => {
+  const path = parse(pathDefinition);
+  return getDataFromPath({...path,  ...{data: Store(path.store).data}});
 };
 
 // Exports
@@ -242,6 +246,7 @@ export function Store(name) {
   if (stores[name]) {
     return stores[name];
   }
+  // const parts = name.split
   throw new Error('Failed to access the store with the name: ' + name);
 }
 
@@ -253,8 +258,13 @@ export function Data(path) {
   return data;
 }
 
-export const registerStore = (name, defaultData, options = {}) =>
-  new _Store(name, defaultData, options);
+export const registerStore = (name, options = {}) =>
+  new ReactiveDataStore(name, options);
+
+export const requireStore = name => {
+  const subscription = Store(name).subscribe({});
+  subscription.unsubscribe();
+};
 
 export const setStoreDebugging = toDebugOrNotToDebug => {
   DEBUG = toDebugOrNotToDebug;

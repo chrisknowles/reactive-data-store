@@ -1,8 +1,8 @@
 (function (global, factory) {
-  typeof exports === 'object' && typeof module !== 'undefined' ? factory(exports, require('rxjs'), require('rxjs/operators'), require('json-local-session-storage'), require('ramda'), require('obj-list'), require('split-trim')) :
-  typeof define === 'function' && define.amd ? define(['exports', 'rxjs', 'rxjs/operators', 'json-local-session-storage', 'ramda', 'obj-list', 'split-trim'], factory) :
-  (factory((global.ReactiveDataStore = {}),global.rxjs,global.operators,global.jsonLocalSessionStorage,global.ramda,global.objList,global.splitTrim));
-}(this, (function (exports,rxjs,operators,jsonLocalSessionStorage,ramda,objList,splitTrim) { 'use strict';
+  typeof exports === 'object' && typeof module !== 'undefined' ? factory(exports, require('rxjs'), require('rxjs/operators'), require('ramda'), require('json-local-session-storage'), require('obj-list'), require('split-trim')) :
+  typeof define === 'function' && define.amd ? define(['exports', 'rxjs', 'rxjs/operators', 'ramda', 'json-local-session-storage', 'obj-list', 'split-trim'], factory) :
+  (global = global || self, factory(global.ReactiveDataStore = {}, global.rxjs, global.operators, global.ramda, global.jsonLocalSessionStorage, global.objList, global.splitTrim));
+}(this, function (exports, rxjs, operators, ramda, jsonLocalSessionStorage, objList, splitTrim) { 'use strict';
 
   function _classCallCheck(instance, Constructor) {
     if (!(instance instanceof Constructor)) {
@@ -98,7 +98,8 @@
     throw new TypeError("Invalid attempt to destructure non-iterable instance");
   }
 
-  var re = /^([A-Za-z0-9.])+(\[.+?\])*([A-Za-z0-9.]*)*(\s*:(just|not)\s*\([A-Za-z0-9,.\s]+\))*(\s*--\s*[A-Za-z0-9]+)*$/m;
+  var re = /^([A-Za-z0-9.])+(\[.+?\])*([A-Za-z0-9.]*)*(\s*:(just|not)\s*\([A-Za-z0-9:,.\s]+\))*(\s*--\s*[A-Za-z0-9]+)*$/m; // const re = /^.*$/;
+
   /**
    * Gets data from an object determined by a path and
    * optionally filters the result.
@@ -121,7 +122,7 @@
         data = _ref$data === void 0 ? {} : _ref$data;
     var result = storePath.reduce(function (acc, path) {
       if (objList.isObject(path)) {
-        acc = objList.objList.get(acc, path.key, path.value);
+        acc = objList.objList.get(acc, _defineProperty({}, path.key, path.value));
         return acc;
       }
 
@@ -145,7 +146,36 @@
         return acc;
       }, {}));
     } else if (not) {
-      return pathResults(name, propName, ramda.omit(not, result));
+      var props = [];
+      var keyVals = [];
+      not.map(function (str) {
+        if (/:/.test(str)) {
+          keyVals.push(str);
+        } else {
+          props.push(str);
+        }
+      });
+
+      if (props) {
+        if (Array.isArray(result)) {
+          result = result.map(function (item) {
+            return pathResults(name, propName, ramda.omit(props, item));
+          });
+        } else {
+          result = pathResults(name, propName, ramda.omit(props, result));
+        }
+      }
+
+      if (keyVals) {
+        keyVals.map(function (pair) {
+          pair = splitTrim.splitTrim(pair, ':');
+          result = result.filter(function (item) {
+            return item[pair[0]] !== pair[1];
+          });
+        });
+      }
+
+      return result;
     }
 
     return pathResults(name, propName, result);
@@ -330,11 +360,6 @@
 
   var stores = {};
   /**
-   * Empty function for use as a no operation
-   */
-
-  var noop = function noop() {};
-  /**
    * Symbols for function names to keep class functions
    * from being overloaded
    */
@@ -350,19 +375,21 @@
    * Class for a single store
    */
 
-  var _Store =
+  var ReactiveDataStore =
   /*#__PURE__*/
   function () {
-    function _Store(name, data, options) {
-      _classCallCheck(this, _Store);
+    function ReactiveDataStore(name, options) {
+      _classCallCheck(this, ReactiveDataStore);
 
       this.name = name;
       this[DATA] = new WeakMap();
       var storedData = options.session && jsonLocalSessionStorage.session.getItem(name);
-      this[DATA].set(this, storedData || data);
-      this.props = [];
+      options.data = options.data || {};
+      this[DATA].set(this, storedData || options.data);
       this.data$ = new rxjs.BehaviorSubject(this.data);
-      this.onSubscribeCallback = options.fetchData || noop;
+      this.onSubscribeCallback = options.fetch ? options.fetch : function () {
+        return options.data;
+      };
       this.debugTimer = null;
       this.useLocalSession = options.session;
 
@@ -377,7 +404,7 @@
      */
 
 
-    _createClass(_Store, [{
+    _createClass(ReactiveDataStore, [{
       key: "setOnSubscribeCallback",
 
       /**
@@ -522,7 +549,7 @@
       key: UPDATE_DATA,
       value: function value(data) {
         if (objList.isObject(data)) {
-          return _objectSpread({}, this._data, data);
+          return ramda.mergeDeepRight(this._data, data);
         } else {
           return data;
         }
@@ -545,7 +572,9 @@
           if (DEBUG) {
             switch (action) {
               case UPDATED:
-                console.log.green(_this2.name, dataCopy, updatedData);
+                console.log("%c\uD83C\uDF4F  ".concat(_this2.name), "color: #52BE80;line-height:1;");
+                console.log("   ", dataCopy);
+                console.log("   ", updatedData);
                 break;
 
               case NOT_UPDATED:
@@ -575,13 +604,13 @@
       }
     }]);
 
-    return _Store;
+    return ReactiveDataStore;
   }();
 
-  var getData = function getData(path) {
-    var data = parse(path);
-    return getDataFromPath(_objectSpread({}, data, {
-      data: Store(data.store).data
+  var getData = function getData(pathDefinition) {
+    var path = parse(pathDefinition);
+    return getDataFromPath(_objectSpread({}, path, {
+      data: Store(path.store).data
     }));
   }; // Exports
 
@@ -589,7 +618,8 @@
   function Store(name) {
     if (stores[name]) {
       return stores[name];
-    }
+    } // const parts = name.split
+
 
     throw new Error('Failed to access the store with the name: ' + name);
   }
@@ -602,9 +632,13 @@
 
     return data;
   }
-  var registerStore = function registerStore(name, defaultData) {
-    var options = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : {};
-    return new _Store(name, defaultData, options);
+  var registerStore = function registerStore(name) {
+    var options = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
+    return new ReactiveDataStore(name, options);
+  };
+  var requireStore = function requireStore(name) {
+    var subscription = Store(name).subscribe({});
+    subscription.unsubscribe();
   };
   var setStoreDebugging = function setStoreDebugging(toDebugOrNotToDebug) {
     DEBUG = toDebugOrNotToDebug;
@@ -616,9 +650,10 @@
   exports.Store = Store;
   exports.Data = Data;
   exports.registerStore = registerStore;
+  exports.requireStore = requireStore;
   exports.setStoreDebugging = setStoreDebugging;
   exports.setStoreSession = setStoreSession;
 
   Object.defineProperty(exports, '__esModule', { value: true });
 
-})));
+}));

@@ -19,7 +19,7 @@ const re = /^([A-Za-z0-9.])+(\[.+?\])*([A-Za-z0-9.]*)*(\s*:(just|not)\s*\([A-Za-
 function getDataFromPath({name, propName, storePath, just, not, data = {}}) {
   let result = storePath.reduce((acc, path) => {
     if (isObject(path)) {
-      acc = objList.get(acc, path.key, path.value);
+      acc = objList.get(acc, {[path.key]: path.value});
       return acc;
     }
     acc = acc ? acc[path] : null;

@@ -1,0 +1,288 @@
+TODO
+  final syntax
+  types - all vals in keyvals are strings
+
+
+don't really need a separator
+returns {list, message}
+this.props.list
+this.props.message
+
+list =
+  HomeFeatures
+    .list[type: abc]
+    .props.images
+    :not(status:archived)
+    :just(id, title)
+& message =
+  App
+    .errorMessages[id: 2]
+    .text
+
+<my-element
+  data-store=${`
+    list =
+      HomeFeatures
+        .list[type: abc]
+        .props.images
+        :not(status: archived)
+        :just(id, title)
+    & message =
+      App
+        .errorMessages[id: 2]
+        .text
+  `}
+>
+  <slot></slot>
+</my-element>
+
+a.b.c[2].d[id:2]:not(name: abc):just(id: 2, name, title)
+
+Path
+==============
+props
+a.b.c
+
+array - index 2
+c[2]
+
+array of objects - filter by id = 2
+  d[id: 2]
+
+    equivalent to:
+    d:just(id: 2)
+
+
+Not
+==============
+
+
+Just
+==============
+this only works when what is returned before :just is an array of objects
+:just(a: b)
+
+this works for an object
+:just(id, name)
+
+combined it selects from an array and filters on props
+:just(a: b, id, name)
+
+array index list[2] - no ':' and a positive integer
+`
+  list =
+    HomeFeatures.list[2]
+    .props.images
+    :not(status:archived)
+    :just(id, title)
+  `
+
+split on not and just
+3 parts here
+`list = App.config.list
+  :not(status: archived)
+  :just(id, title)
+`
+... different 3 parts here
+why? just use :just(name)
+`list = App.config.list
+  :not(status: archived)
+  .name
+`
+
+just picks the id and title of list items where status = archived
+list =
+  App.config.list
+  :filter(status: archived)
+  :just(id, title)
+
+Conceivably you could have a structure that uses index and filter and maybe just and not as well. It's possible they are maybe not exclusive (I think)
+I don't think just would be used with not
+It's final stage piskcing of props - you wouldn't use it till the end
+
+{
+  prop1: {
+    array1: [
+      {
+        prop2: {
+          array2: [
+            {id: 1, name, title, desc, contacts: [{id: 1}, {id: 2}]},
+            {id: 2, name, title, desc, contacts: [{}, {}]},
+          ],
+          array4: [
+            {id: 1, name, title, desc, contacts: [{id: 1}, {id: 2}]},
+            {id: 2, name, title, desc, contacts: [{id: 1, name}, {id: 2, name}]},
+          ]
+        },
+        prop5: {
+          array5: [
+            {id: 1, name, title, desc, contacts: [{id: 1}, {id: 2}]},
+            {id: 2, name, title, desc, contacts: [{}, {}]},
+          ],
+          array6: [
+            {id: 1, name, title, desc, contacts: [{id: 1}, {id: 2}]},
+            {id: 2, name, title, desc, contacts: [{}, {}]},
+          ]
+        }
+      },
+      {
+        prop3: {
+          array3: [
+            {id: 1, name, title, desc, contacts: [{}, {}]},
+            {id: 2, name, title, desc, contacts: [{}, {}]},
+          ]
+        }
+      },
+    ]
+  }
+}
+
+This shows the potential for mixed index and filter and multiples of them but only either just or not or neither
+It also shows I think that it's better not to combine filtering with just and not for clarity's sake and also probably will be easier to code to
+
+prop1
+.array1    
+:index(0)         
+.prop2.array4        
+:filter(id: 2)
+.contacts
+:index(1)
+:just(name)
+
+So it's down to syntax...
+
+prop1
+.array1[0]
+.prop2
+.array4[id: 2]
+.contacts[1]
+:just(name)
+
+The second one is more succinct and just as readable as the first I think
+The second one reads better on one line
+It also is essentially what I already created :)
+Having sad that, this is an extreme case. Normally you'd probably only ever have one filter or index...
+
+prop1             prop1
+.array1           .array1[0]
+:index(0)         :just(name)
+:just(name)
+
+...filter is nice but index not som much - it's just on number...
+(or could it be a list) 
+
+prop1.array1[2,5,12]    
+  hard to ever see a case for this
+  I would have thought occasionally you might use array[0] to get the first but beyond that it's hard to see how it's useful (maybe the last too ?)
+
+Index and filter can definitely be needed in the middle of props though
+...but this is easy
+
+prop1
+.array1    
+:filter(id: 1)         
+:not(name)
+
+prop1.list
+:filter(type: abc)
+:just(id, name, desc)
+
+3 options
+
+  propName =
+    p.a.t.h
+    :index(2)
+
+  propName =
+    p.a.t.h:filter(prop1: val1, prop2: val2).contacts:just(p, r, o, p, s)
+
+  propName =
+    p.a.t.h
+    :filter(prop1: val1, prop2: val2)
+    :not(p, r, o, p, s)
+  
+  and
+
+  propName =
+    p.a.t.h[2]
+
+  propName =
+    p.a.t.h[prop1: val1, prop2: val2]
+    :just(p, r, o, p, s)
+
+  propName =
+    p.a[1].t.h[prop1: val1, prop2: val2]
+    :not(p, r, o, p, s)
+
+list =
+  HomeFeatures.list[2]
+  .props.images
+  :not(status:archived)
+  :just(id, title)
+
+however, should just be used anywhere like:
+    a.b.c:just(type: abc).x NO - would be:
+    a.b.c:just(type: abc, x)
+
+    would you ever use :not here?
+    a.b.c:just(type: abc, x):not(...) ??
+
+    MarketFocusItems
+    .list[id: ${this.selectedId}]
+    :just(id, images)
+
+      MarketFocusItems
+      .list
+      :just(id: ${this.selectedId}, id, images)
+
+    MarketFocusItems
+    .list.[id:${this.selectedId}]
+    :not(images)
+
+      This saves picking all props except images in the :just
+      MarketFocusItems.list
+      :just(id: ${this.selectedId})
+      :not(images)
+
+      This gets rid of the just (from above) and saves having just before not and also after it
+      MarketFocusItems.list
+      :filter(list, id, ${this.selectedId})
+      :not(images)
+
+    list =
+      HomeFeatures.list
+      :not(status: archived)
+      :just(id, title)
+
+      not is same as filter (above)
+      list =
+        HomeFeatures.list
+        :filter(status: archived)
+        :just(id, title)
+
+    selected =
+      Projects.list
+      &
+      MarketFocusSections.list
+      :just(id: ${this.selectedId}, projects)
+
+      selected =
+        Projects.list
+        &
+        MarketFocusSections
+        .list[id, ${this.selectedId}]
+        :just(projects)
+
+        MarketFocusSections
+        .list[id: ${this.selectedId}]
+        :just(projects)
+
+
+
+
+
+
+
+
+
+
