@@ -32,6 +32,7 @@
   },
   "dependencies": {
     "json-local-session-storage": "^1.0.0",
+    "obj-list": "^0.1.0",
     "ramda": "^0.26.1",
     "rxjs": "^6.4.0",
     "split-trim": "^0.1.0"
