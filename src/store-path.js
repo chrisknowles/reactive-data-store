@@ -2,7 +2,7 @@ import {pick, omit, path, propSatisfies, find} from 'ramda';
 import {objList, isObject} from 'obj-list';
 import {splitTrim} from 'split-trim';
 
-const re = /^([A-Za-z0-9.])+(\[.+?\])*([A-Za-z0-9.]*)*(\s*:(just|not)\s*\([A-Za-z0-9:,.\s]+\))*(\s*--\s*[A-Za-z0-9]+)*$/m;
+const re = /^([A-Za-z0-9.])+(\[.+?\])*([A-Za-z0-9.]*)*(\s*:(just|not)\s*\([A-Za-z0-9_:,.\s]+\))*(\s*--\s*[A-Za-z0-9]+)*$/m;
 // const re = /^.*$/;
 
 /**

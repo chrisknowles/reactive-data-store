@@ -103,7 +103,7 @@ function _nonIterableRest() {
   throw new TypeError("Invalid attempt to destructure non-iterable instance");
 }
 
-var re = /^([A-Za-z0-9.])+(\[.+?\])*([A-Za-z0-9.]*)*(\s*:(just|not)\s*\([A-Za-z0-9:,.\s]+\))*(\s*--\s*[A-Za-z0-9]+)*$/m; // const re = /^.*$/;
+var re = /^([A-Za-z0-9.])+(\[.+?\])*([A-Za-z0-9.]*)*(\s*:(just|not)\s*\([A-Za-z0-9_:,.\s]+\))*(\s*--\s*[A-Za-z0-9]+)*$/m; // const re = /^.*$/;
 
 /**
  * Gets data from an object determined by a path and
@@ -652,8 +652,8 @@ var setStoreSession = function setStoreSession(session) {
   USE_SESSION = session;
 };
 
-exports.Store = Store;
 exports.Data = Data;
+exports.Store = Store;
 exports.registerStore = registerStore;
 exports.requireStore = requireStore;
 exports.setStoreDebugging = setStoreDebugging;

@@ -1,6 +1,6 @@
 {
   "name": "reactive-data-store",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "A reactive data store that can be subscribed to and accessed using string paths",
   "main": "dist/index.js",
   "module": "src/index.js",
